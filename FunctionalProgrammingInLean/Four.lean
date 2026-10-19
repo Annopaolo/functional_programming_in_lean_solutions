@@ -1,3 +1,11 @@
+/-!
+# Four
+
+Solutions to the exercises on monads, applicatives and the `Reader`/`WithLog`/`Validate` examples.
+-/
+
+namespace Four
+
 /-
  Define a function BinTree.mapM. By analogy to mapM for lists,
  this function should apply a monadic function to each data entry in a tree,
@@ -574,3 +582,5 @@ def Validate.mapErrors (a: Validate ε α) (f: ε → ε') : Validate ε' α :=
   match a with
   | .ok x => .ok x
   | .errors errs1 => .errors (f errs1)
+
+end Four

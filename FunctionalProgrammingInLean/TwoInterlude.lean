@@ -1,3 +1,11 @@
+/-!
+# TwoInterlude
+
+Solutions to the exercises on `rfl`, `decide` and safe indexing.
+-/
+
+namespace TwoInterlude
+
 --Prove the following theorems using rfl: 2 + 3 = 5
 theorem twoPlusThreeIsFive : 2 + 3 = 5 := by rfl
 
@@ -32,3 +40,5 @@ def safeFifth {α : Type} (xs : List α) (ok: List.length xs >= 5) := xs[4]
 
 -- this fails as the list is provably shorter
 -- #eval safeFifth [1,2,3,4] (by sorry)
+
+end TwoInterlude

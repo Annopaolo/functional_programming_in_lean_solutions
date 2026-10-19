@@ -1,3 +1,11 @@
+/-!
+# Seven
+
+Solutions to the exercises on indexed families (`Vect`) and universe design (`Finite`).
+-/
+
+namespace Seven
+
 inductive Vect (α : Type u) : Nat → Type u where
    | nil : Vect α 0
    | cons : α → Vect α n → Vect α (n + 1)
@@ -126,7 +134,7 @@ mutual
     | .unit => [()]
     | .bool => [true, false]
     | .option t => none :: (Option.some <$> t.enumerate)
-    | .pair t1 t2 => t1.enumerate.product t2.enumerate
+    | .pair t1 t2 => List.product t1.enumerate t2.enumerate
     | .arr dom cod => dom.functions cod.enumerate
 
   def Finite.functions
@@ -138,7 +146,7 @@ mutual
     results.map fun r =>
       fun () => r
   | .bool =>
-    (results.product results).map fun (r1, r2) =>
+    (List.product results results).map fun (r1, r2) =>
       fun
         | true => r1
         | false => r2
@@ -193,3 +201,5 @@ def Finite.beq (t : Finite) (x y : t.asType) : Bool :=
   | .pair t1 t2 => beq t1 x.fst y.fst && beq t2 x.snd y.snd
   | .arr dom cod =>
     dom.enumerate.all fun arg => beq cod (x arg) (y arg)
+
+end Seven

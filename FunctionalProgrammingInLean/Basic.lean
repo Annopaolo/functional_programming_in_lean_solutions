@@ -1,1 +1,7 @@
-def hello := "world"
+import FunctionalProgrammingInLean.One
+import FunctionalProgrammingInLean.Two
+import FunctionalProgrammingInLean.TwoInterlude
+import FunctionalProgrammingInLean.Three
+import FunctionalProgrammingInLean.Four
+import FunctionalProgrammingInLean.Five
+import FunctionalProgrammingInLean.Seven

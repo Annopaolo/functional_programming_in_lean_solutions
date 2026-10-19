@@ -1,3 +1,11 @@
+/-!
+# Three
+
+Solutions to the exercises on type classes, instances and `Functor`.
+-/
+
+namespace Three
+
 --  An alternative way to represent a positive number is as the successor of some Nat.
 -- Replace the definition of Pos with a structure whose constructor is named succ
 -- that contains a Nat:
@@ -215,3 +223,5 @@ def BinTree.map (f : α -> β) (xs : BinTree α) : (BinTree β) :=
 
 instance : Functor BinTree where
   map := BinTree.map
+
+end Three

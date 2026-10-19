@@ -1,4 +1,10 @@
-/-
+/-!
+# Five
+
+Solution to the `doug` directory-tree exercises.
+-/
+
+/-!
 - Files whose names begin with a dot character ('.') typically represent files that should usually be hidden,
   such as source-control metadata and configuration files.
   Modify doug with an option to show or hide filenames that begin with a dot.
@@ -7,7 +13,7 @@
 - Modify doug so that it takes a starting directory as an additional command-line argument.
 -/
 
-module
+namespace Five
 
 structure Config where
   useASCII : Bool := false
@@ -97,3 +103,5 @@ def main (args : List String) : IO UInt32 := do
       IO.eprintln s!"Didn't understand argument(s) {args}\n"
       IO.eprintln usage
       pure 1
+
+end Five

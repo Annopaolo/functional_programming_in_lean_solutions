@@ -1,3 +1,11 @@
+/-!
+# One
+
+Solutions to the exercises on structures, polymorphism, `Option` and sums/products.
+-/
+
+namespace One
+
 -- joinStringsWith with type String → String → String → String
 -- that creates a new string by placing its first argument between
 -- its second and third arguments.
@@ -76,3 +84,5 @@ match x with
 -- In other words, it should have type Bool × α → α ⊕ α
 def boolToSum : Bool × α → α ⊕ α
 | (_, a) => @Sum.inl α α a
+
+end One
