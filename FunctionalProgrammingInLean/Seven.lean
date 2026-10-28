@@ -584,3 +584,56 @@ Provide the extra DBExpr constructors that seem to be necessary.
 -/
 
 end TypedQueries
+
+namespace Pitfalls
+
+-- The usual definition of Vect
+inductive Vect (α : Type u) : Nat → Type u where
+   | nil : Vect α 0
+   | cons : α → Vect α n → Vect α (n + 1)
+
+def Nat.plusL : Nat → Nat → Nat
+  | 0, k => k
+  | n + 1, k => plusL n k + 1
+
+def Nat.plusR : Nat → Nat → Nat
+  | n, 0 => n
+  | n, k + 1 => plusR n k + 1
+
+-- These are just `def`s under the hood: we use `theorem` so that Lean knows they are proofs.
+theorem plusR_zero_left : (k : Nat) → k = Nat.plusR 0 k
+  | 0 => by rfl
+  | k + 1 =>
+    congrArg (· + 1) (plusR_zero_left k)
+
+theorem plusR_succ_left (n : Nat) :
+    (k : Nat) → Nat.plusR (n + 1) k = Nat.plusR n k + 1
+  | 0 => by rfl
+  -- `congrArg` takes a function and an equality proof and returns a new proof where the function has been applied to both sides of the equality
+  | k + 1 => congrArg (· + 1) (plusR_succ_left n k)
+
+def appendR : Vect α n → Vect α k → Vect α (Nat.plusR n k)
+  -- Given an equality proof as its first argument and some other expression as its second,
+  -- ▸ replaces instances of one side of the equality with the other side of the equality in the second argument's type
+  | .nil, ys => plusR_zero_left _ ▸ ys
+  | .cons x xs, ys => plusR_succ_left _ _ ▸ .cons x (appendR xs ys)
+
+/-
+Using a recursive function in the style of plusR_succ_left, prove that for all Nats n and k, Nat.plusR n k = n + k.
+-/
+
+theorem plusR_is_indeed_plus (n : Nat) :
+  (k : Nat) -> Nat.plusR n k = n + k
+  | 0 => by rfl
+  | k + 1 => congrArg (· + 1) (plusR_is_indeed_plus n k)
+
+/-
+Write a function on Vect for which plusR is more natural than plusL, where plusL would require proofs to be used in the definition.
+-/
+
+def push : Vect α n -> α -> Vect α (Nat.plusR n 1)
+  | .nil, a => .cons a .nil
+  | .cons x .nil, a => .cons x (.cons a .nil)
+  | .cons x xs, a => .cons x (push xs a)
+
+end Pitfalls
