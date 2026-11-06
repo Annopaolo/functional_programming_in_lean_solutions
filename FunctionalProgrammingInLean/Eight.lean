@@ -146,3 +146,70 @@ theorem non_tail_factorial_eq_tail_factorial :
   | succ n n_ih =>
     simp [NonTail.factorial, Tail.factorial, Tail.factorialHelper]
     rw [non_tail_factorial_eq_tail_factorial_helper]
+
+/-
+Implement a ForM m (Array α) instance on arrays
+using a tail-recursive accumulator-passing function and a termination_by clause.
+-/
+def arrayForMHelper [Monad m] (arr: Array α) (f: α -> m Unit) (i: Nat) : m Unit :=
+  if proof: i < arr.size then
+    f arr[i] >>= fun _ => arrayForMHelper arr f (i + 1)
+  else
+    pure ()
+  termination_by arr.size - i
+
+
+def Array.forM [Monad m] (arr: Array α) (f: α -> m Unit) : m Unit :=
+  arrayForMHelper arr f 0
+
+instance [Monad m] : ForM m (Array α) α where
+  forM := Array.forM
+
+#eval forM (Array.mk [1,2,3,4]) IO.println
+
+/-
+Reimplement Array.map, Array.find, and the ForM instance using
+for ... in ... loops in the identity monad and compare the resulting code.
+-/
+
+def Array.map (f : α → β) (arr : Array α) : Array β := Id.run do
+  let mut ret := Array.mk []
+  for x in arr do
+    ret := ret.push (f x)
+  pure ret
+
+#eval Array.map (fun x => x *2) (Array.mk [1,2,4,5])
+
+def Array.find (arr : Array α) (p : α → Bool) : Option (Nat × α) := Id.run do
+  for h : i in [0 : arr.size] do
+    let x := arr[i]
+    if p x then return some (i, x)
+  pure none
+
+#eval Array.find (Array.mk [1,2,4,5]) (fun x => x % 2 == 0)
+
+def Array.forM' [Monad m] (arr: Array α) (f: α -> m Unit) : m Unit := do
+  for x in arr do f x
+
+instance [Monad m] : ForM m (Array α) α where
+  forM := Array.forM'
+
+#eval forM (Array.mk [1,2,3,4]) IO.println
+
+
+-- Code does not need explicit tail-recursive helpers, and most proofs are already done by lean!
+
+/-
+Reimplement array reversal using a for ... in ... loop in the identity monad.
+Compare it to the tail-recursive function.
+-/
+
+def reverseArray (arr: Array α) : Array α := Id.run do
+  let mut ret := []
+  for x in arr do
+    ret :=  x :: ret
+  pure (Array.mk ret)
+
+#eval reverseArray (Array.mk [1,2,3,4,5])
+
+-- ret is the accumulator! The base case is its instantiation, and the recursive case its update. Wow!
