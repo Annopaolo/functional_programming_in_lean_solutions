@@ -1,0 +1,65 @@
+// Template for Lean 4 projects. Copy to <project>/.devcontainer/devcontainer.json
+// and set DEVENV_WORKSPACE_REPO to the project's repo (see README, "New project").
+// Uses the image CI publishes from main, while the project is early; it moves
+// to stable release tags later. `:main` moves, so `podman pull` it before
+// `devpod up --recreate` to pick up a new build. Pulling needs `podman login
+// ghcr.io` (README, "Images from ghcr.io"). To try a local build instead, use
+// "localhost/devenv-lean:latest".
+{
+  "name": "devenv",
+  "image": "ghcr.io/annopaolo/devenv-lean:main",
+  // The container starts as root so dev doesn't get the firewall capabilities:
+  // Podman gives --cap-add capabilities to a non-root container user, while a
+  // switch from root to dev clears them. DevPod runs shells and lifecycle
+  // commands as remoteUser; egress-check fails if dev has any capabilities.
+  "containerUser": "root",
+  "remoteUser": "dev",
+  // keep-id maps your host user to dev (1000:1000) whatever your host UID is,
+  // so DevPod doesn't need to rewrite dev's UID. NET_ADMIN/NET_RAW are only for
+  // the egress firewall; dev itself has no capabilities and can't sudo iptables.
+  "runArgs": [
+    "--userns=keep-id:uid=1000,gid=1000",
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW"
+  ],
+  // Allowlist-only egress on every start (fails closed), then check it.
+  "postStartCommand": "sudo init-firewall && egress-check",
+  "updateRemoteUserUID": false,
+  // The workspace is one per-workspace named volume on all of /workspaces, not
+  // a bind mount of the host checkout: the project and any repo you clone next
+  // to it survive a recreate, shared with Claude Code (share-workspace). The
+  // first interactive shell clones DEVENV_WORKSPACE_REPO into DEVENV_WORKSPACE
+  // and opens there (scripts/first-shell-hook.zsh). workspaceFolder is the
+  // volume root, because DevPod's setup runs in it before any shell, so it must
+  // exist when the container starts. Nothing here is secret.
+  "workspaceMount": "source=devenv-workspaces-${localWorkspaceFolderBasename},target=/workspaces,type=volume",
+  "workspaceFolder": "/workspaces",
+  // Per-project settings, all public: which dotfiles to apply and the repo to
+  // clone. Both are reached with your GitHub key, kept in devenv-ssh.
+  "containerEnv": {
+    "DOTFILES_REPO": "${localEnv:DOTFILES_REPO}",
+    "DEVENV_WORKSPACE_REPO": "https://github.com/Annopaolo/functional_programming_in_lean_solutions.git",
+    "DEVENV_WORKSPACE": "/workspaces/${localWorkspaceFolderBasename}",
+    // Extra egress hosts for this project only, space-separated, on top of the
+    // image's allowlist. The first init-firewall run in a new container locks
+    // them in; recreate the container to change them.
+    "DEVENV_EGRESS_ALLOW": ""
+  },
+  // Named volumes, shared by every workspace that uses these names. Podman
+  // creates them on first use and copies in the image's mount points (owned by
+  // dev, or by agent for Claude Code's state).
+  "mounts": [
+    "source=devenv-agent-claude,target=/home/agent/.claude,type=volume",
+    // Your deploy keys (passphrase-protected), never readable by agent.
+    "source=devenv-ssh,target=/home/dev/.ssh,type=volume",
+    "source=devenv-nvim-data,target=/home/dev/.local/share/nvim,type=volume",
+    "source=devenv-nvim-state,target=/home/dev/.local/state/nvim,type=volume",
+    "source=devenv-nvim-cache,target=/home/dev/.cache/nvim,type=volume",
+    "source=devenv-zsh-history,target=/home/dev/.local/state/zsh,type=volume",
+    // Lean toolchains, shared by dev and agent: dev installs, agent reads
+    // (README, "Lean tools").
+    "source=devenv-elan,target=/opt/elan,type=volume",
+    // Mathlib's downloaded build cache (`lake exe cache get`).
+    "source=devenv-mathlib,target=/home/dev/.cache/mathlib,type=volume"
+  ]
+}
